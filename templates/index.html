@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>EstateBot | Real Estate Assistant</title>
+<style>
+  :root {
+    --bg-1: #0f172a;
+    --bg-2: #1e293b;
+    --accent: #f59e0b;
+    --accent-2: #10b981;
+    --bubble-user: #10b981;
+    --bubble-bot: #1e293b;
+    --text-light: #f1f5f9;
+    --text-muted: #94a3b8;
+    --radius: 18px;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: radial-gradient(circle at top left, #1e293b, #0f172a 60%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .app-shell {
+    width: 100%;
+    max-width: 480px;
+    height: 90vh;
+    max-height: 760px;
+    background: linear-gradient(180deg, #111c30, #0b1424);
+    border-radius: 24px;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background: linear-gradient(120deg, #0f172a, #1e293b);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .logo {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .header-text h1 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--text-light);
+    letter-spacing: 0.3px;
+  }
+
+  .header-text p {
+    margin: 2px 0 0;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--accent-2);
+    margin-left: auto;
+    box-shadow: 0 0 8px var(--accent-2);
+  }
+
+  .chat-window {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .chat-window::-webkit-scrollbar {
+    width: 6px;
+  }
+  .chat-window::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  .msg-row {
+    display: flex;
+    gap: 10px;
+    max-width: 100%;
+    animation: fadeIn 0.25s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .msg-row.user {
+    justify-content: flex-end;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  }
+
+  .bubble {
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    max-width: 78%;
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  .msg-row.bot .bubble {
+    background: var(--bubble-bot);
+    color: var(--text-light);
+    border-bottom-left-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .msg-row.user .bubble {
+    background: linear-gradient(135deg, var(--bubble-user), #059669);
+    color: #05261c;
+    font-weight: 500;
+    border-bottom-right-radius: 4px;
+  }
+
+  .typing {
+    display: flex;
+    gap: 4px;
+    padding: 12px 16px;
+  }
+
+  .typing span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    animation: blink 1.4s infinite both;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.2s; }
+  .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0.2; }
+    40% { opacity: 1; }
+  }
+
+  .quick-chips {
+    display: flex;
+    gap: 8px;
+    padding: 0 20px 12px;
+    flex-wrap: wrap;
+  }
+
+  .chip {
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .chip:hover {
+    background: var(--accent);
+    color: #1a1a1a;
+    border-color: var(--accent);
+  }
+
+  .input-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #0b1424;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  #user-input {
+    flex: 1;
+    background: #16213a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-light);
+    padding: 12px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    outline: none;
+    resize: none;
+  }
+
+  #user-input:focus {
+    border-color: var(--accent);
+  }
+
+  #send-btn {
+    background: linear-gradient(135deg, var(--accent), #d97706);
+    border: none;
+    color: #1a1a1a;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease;
+  }
+
+  #send-btn:hover {
+    transform: scale(1.06);
+  }
+
+  #send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+  <div class="header">
+    <div class="logo">🏠</div>
+    <div class="header-text">
+      <h1>EstateBot</h1>
+      <p>Your real estate & property assistant</p>
+    </div>
+    <div class="status-dot"></div>
+  </div>
+
+  <div class="chat-window" id="chat-window">
+    <div class="msg-row bot">
+      <div class="avatar">🏠</div>
+      <div class="bubble">
+        Hi! I'm EstateBot 👋 I can help you with property buying, selling, renting,
+        pricing, home loans, and more. What would you like to know?
+      </div>
+    </div>
+  </div>
+
+  <div class="quick-chips">
+    <div class="chip" onclick="sendQuickMessage('How is property valuation done?')">Property valuation</div>
+    <div class="chip" onclick="sendQuickMessage('What documents are needed to buy a house?')">Buying docs</div>
+    <div class="chip" onclick="sendQuickMessage('Tips for renting out my apartment')">Renting tips</div>
+  </div>
+
+  <div class="input-bar">
+    <textarea id="user-input" rows="1" placeholder="Ask about properties, prices, loans..."></textarea>
+    <button id="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+  const chatWindow = document.getElementById('chat-window');
+  const userInput = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+
+  // Simple per-browser-tab session id
+  const sessionId = 'session-' + Math.random().toString(36).substring(2, 12);
+
+  function appendMessage(text, sender) {
+    const row = document.createElement('div');
+    row.className = 'msg-row ' + sender;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = sender === 'user' ? '🧑' : '🏠';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.textContent = text;
+
+    if (sender === 'user') {
+      row.appendChild(bubble);
+      row.appendChild(avatar);
+    } else {
+      row.appendChild(avatar);
+      row.appendChild(bubble);
+    }
+
+    chatWindow.appendChild(row);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    return row;
+  }
+
+  function showTypingIndicator() {
+    const row = document.createElement('div');
+    row.className = 'msg-row bot';
+    row.id = 'typing-row';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = '🏠';
+
+    const typing = document.createElement('div');
+    typing.className = 'bubble typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+
+    row.appendChild(avatar);
+    row.appendChild(typing);
+    chatWindow.appendChild(row);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function removeTypingIndicator() {
+    const row = document.getElementById('typing-row');
+    if (row) row.remove();
+  }
+
+  async function sendMessage() {
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    appendMessage(message, 'user');
+    userInput.value = '';
+    sendBtn.disabled = true;
+    showTypingIndicator();
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: message, session_id: sessionId })
+      });
+      const data = await res.json();
+      removeTypingIndicator();
+      appendMessage(data.reply, 'bot');
+    } catch (err) {
+      removeTypingIndicator();
+      appendMessage('Network error. Please try again.', 'bot');
+    } finally {
+      sendBtn.disabled = false;
+      userInput.focus();
+    }
+  }
+
+  function sendQuickMessage(text) {
+    userInput.value = text;
+    sendMessage();
+  }
+
+  userInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  userInput.addEventListener('input', function () {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+  });
+</script>
+
+</body>
+</html>
